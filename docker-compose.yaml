@@ -1,0 +1,55 @@
+services:
+  database:
+    build: ./database
+    restart: always
+    ports:
+      - "5432:5432"
+    volumes:
+      - bustijdenapi_dbdata:/var/lib/postgresql/data
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+  redis:
+    image: redis:7.4-bookworm
+    hostname: redis
+    restart: always
+  api:
+    build: ./api
+    hostname: api
+    restart: always
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+      USER_AGENT: ${USER_AGENT}
+      TZ: ${TZ}
+    depends_on:
+      - database
+      - redis
+  worker:
+    build: ./api
+    command: worker
+    hostname: worker
+    restart: always
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+      USER_AGENT: ${USER_AGENT}
+      TZ: ${TZ}
+      SYNC_TRIPUPDATE_INTERVAL_MIN: ${SYNC_TRIPUPDATE_INTERVAL_MIN}
+    depends_on:
+      - database
+      - redis
+
+networks:
+  default:
+    name: bustijdenapi
+volumes:
+  bustijdenapi_dbdata:
