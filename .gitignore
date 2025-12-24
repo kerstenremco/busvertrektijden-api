@@ -4,4 +4,4 @@ dist/
 .env*
 api/src/debug_feed.pb
 docker-compose.override.yaml
-/generated/prisma
+/src/generated/prisma
