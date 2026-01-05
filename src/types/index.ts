@@ -27,6 +27,26 @@ export const NewTripUpdateSchema = z.object({
 
 export type NewTripUpdate = z.infer<typeof NewTripUpdateSchema>;
 
+// Alert types and schema
+export const AlertSchema = z.object({
+  from: z.number(),
+  end: z.number(),
+  routeId: z.string().optional(),
+  header: z.string(),
+  description: z.string(),
+  effect: z.number().optional(),
+  cause: z.number().optional(),
+});
+
+export type Alert = z.infer<typeof AlertSchema>;
+
+export const NewAlertSchema = z.object({
+  stopId: z.string(),
+  body: AlertSchema,
+});
+
+export type NewAlert = z.infer<typeof NewAlertSchema>;
+
 // Stop types and schema
 export const StopTimeSchema = z.object({
   arrivalTime: z.string(),
