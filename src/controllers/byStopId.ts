@@ -1,10 +1,11 @@
 import { getStopIdsInArea, getStopTimes } from "../database/stops";
 import { todayYyyymmdd, yyyymmddToDayjs } from "../helpers/time";
 import { getServicesByDate } from "../database/service";
-import { StopTimesResult } from "../types";
+import { Alert, StopTimesResult } from "../types";
 import { getTripUpdate } from "../redis/tripUpdate";
 import { getCachedStopTimesByStop, setCachedStopTimesByStop } from "../redis/cache";
 import dayjs from "dayjs";
+import { getAlerts } from "../redis/alerts";
 
 async function getUniqueStopIds(ids: string[]): Promise<string[]> {
   // For each area, get stopIds
@@ -68,6 +69,24 @@ export async function getStopTimesAtStop(ids: string[], date: string | undefined
       minutesUntill,
     };
     stop.tripUpdate = computedTripUpdate;
+  }
+
+  // Get alerts
+  for await (const stopId of allIds) {
+    const stopAlerts = await getAlerts(stopId);
+
+    result.results.forEach((item) => {
+      item.alerts = stopAlerts.filter((alert) => {
+        const sameRoute = alert.routeId == undefined || alert.routeId == item.stopTime.routeId;
+        if (!sameRoute) return false;
+
+        // Time
+        let [h, min] = item.stopTime.arrivalTime.split(":").map((x) => parseInt(x));
+        let time = yyyymmddToDayjs(dateString)!.set("hour", h).set("minute", min).set("second", 0);
+        const activeNow = alert.from <= time.unix() && alert.end >= time.unix();
+        return activeNow;
+      });
+    });
   }
 
   // TODO: Filter, sort and return

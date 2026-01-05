@@ -83,6 +83,7 @@ export const StopTimesResultSchema = z.object({
       stopTimeCached: z.boolean(),
       stopTime: StopTimeSchema,
       tripUpdate: TripUpdateComputedSchema.optional(),
+      alerts: z.array(AlertSchema).optional(),
     })
   ),
 });
