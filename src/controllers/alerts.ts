@@ -1,8 +1,8 @@
-import fs from "fs";
 import { transit_realtime } from "gtfs-realtime-bindings";
-import { Alert, NewAlert } from "../types";
-import { getAlerts, getLastModifiedHeader, setAlerts, setLastModifiedHeader } from "../redis/alerts";
+import { NewAlert } from "../types";
+import { getLastModifiedHeader, setAlerts, setLastModifiedHeader } from "../redis/alerts";
 import { GTFS_SETTINGS } from "../settings";
+import logger from "../helpers/logger";
 
 // alert:stopId:xx - alert:routeId:xx - alert:tripId:xx
 // from, to, header, description, effect, cause
@@ -36,54 +36,55 @@ async function fetchFeed(): Promise<transit_realtime.FeedMessage> {
 
 async function convertFeedToAlerts(feed: transit_realtime.FeedMessage): Promise<NewAlert[]> {
   const result: NewAlert[] = [];
-  try {
-    const alerts = feed.entity.map((x) => x.alert).filter((x) => x != undefined);
+  const alerts = feed.entity.map((x) => x.alert).filter((x) => x != undefined);
 
-    alerts.forEach((alert) => {
-      const from = alert.activePeriod?.at(0)?.start;
-      const end = alert.activePeriod?.at(0)?.end;
-      const header = alert.headerText?.translation?.at(0)?.text;
-      const description = alert.descriptionText?.translation?.at(0)?.text;
-      const informedEntity = alert.informedEntity;
-      const effect = alert.effect || undefined;
-      const cause = alert.cause || undefined;
+  alerts.forEach((alert) => {
+    const from = alert.activePeriod?.at(0)?.start;
+    const end = alert.activePeriod?.at(0)?.end;
+    const header = alert.headerText?.translation?.at(0)?.text;
+    const description = alert.descriptionText?.translation?.at(0)?.text;
+    const informedEntity = alert.informedEntity;
+    const effect = alert.effect || undefined;
+    const cause = alert.cause || undefined;
 
-      if (!from || !end || !header || !description || !informedEntity) {
-        return console.log("No valid fields!");
+    if (!from || !end || !header || !description || !informedEntity) {
+      return logger.warn("[alerts-sync] Incomplete alert data, skipping alert");
+    }
+
+    informedEntity.forEach((entity) => {
+      const stopId = entity.stopId;
+      const routeId = entity.routeId || undefined;
+
+      if (!stopId) {
+        return logger.warn("[alerts-sync] Alert without stopId, skipping entity");
       }
 
-      informedEntity.forEach((entity) => {
-        const stopId = entity.stopId;
-        const routeId = entity.routeId || undefined;
-
-        if (!stopId) {
-          return console.log("No stopId found!");
-        }
-
-        const newAlert: NewAlert = {
-          stopId,
-          body: {
-            from: Number(from),
-            end: Number(end),
-            routeId,
-            header,
-            description,
-            effect,
-            cause,
-          },
-        };
-        result.push(newAlert);
-      });
+      const newAlert: NewAlert = {
+        stopId,
+        body: {
+          from: Number(from),
+          end: Number(end),
+          routeId,
+          header,
+          description,
+          effect,
+          cause,
+        },
+      };
+      result.push(newAlert);
     });
-  } catch (error) {
-    console.error("Error syncing alerts data:", error);
-  }
+  });
   return result;
 }
 
 export async function sync() {
-  const feed = await fetchFeed();
-  const alerts = await convertFeedToAlerts(feed);
-  await setAlerts(alerts);
-  console.log(`Stored ${alerts.length} alerts in Redis`);
+  try {
+    logger.info(`[alerts-sync] Started syncing alerts`);
+    const feed = await fetchFeed();
+    const alerts = await convertFeedToAlerts(feed);
+    await setAlerts(alerts);
+    logger.info(`[alerts-sync] Stored ${alerts.length} alerts in Redis`);
+  } catch (error) {
+    logger.error(error);
+  }
 }

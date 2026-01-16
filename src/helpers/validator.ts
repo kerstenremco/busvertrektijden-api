@@ -9,11 +9,7 @@ export const querySchema = z.object({
 });
 
 export const validateQuery = (req, res, next) => {
-  const parseResult = querySchema.safeParse(req.query);
-  if (!parseResult.success) {
-    console.error("Validation error:", parseResult.error);
-    return res.status(500).json({ error: "Invalid request" });
-  }
+  const parseResult = querySchema.parse(req.query);
   next();
 };
 
@@ -30,18 +26,7 @@ export const stopQuerySchema = z.object({
 });
 
 export const validateStops = (req, res, next) => {
-  const stopParameters = stopParameterSchema.safeParse(req.params);
-  const stopQuery = stopQuerySchema.safeParse(req.query);
-
-  if (!stopParameters.success) {
-    console.error("Validation error:", stopParameters.error);
-    return res.status(500).json({ error: "Invalid request" });
-  }
-
-  if (!stopQuery.success && req.query.date !== undefined) {
-    console.error("Validation error:", stopQuery.error);
-    return res.status(500).json({ error: "Invalid request" });
-  }
-
+  stopParameterSchema.parse(req.params);
+  stopQuerySchema.parse(req.query);
   next();
 };

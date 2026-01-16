@@ -15,3 +15,9 @@ export const realTimeUpdateCounter = new promClient.Counter({
   labelNames: ["type"],
 });
 promRegister.registerMetric(realTimeUpdateCounter);
+
+export const clientsGauge = new promClient.Gauge({
+  name: "active_clients_last_minute",
+  help: "Number of active clients in the last minute",
+});
+promRegister.registerMetric(clientsGauge);

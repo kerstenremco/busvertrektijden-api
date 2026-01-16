@@ -8,6 +8,8 @@ import { getStopTimesAtStop } from "./controllers/byStopId";
 import { validateQuery, validateStops } from "./helpers/validator";
 import { rateLimit } from "express-rate-limit";
 import { SERVER_SETTINGS } from "./settings";
+import logger from "./helpers/logger";
+import reportClient from "./helpers/clientsCounter";
 
 const app = express();
 app.set("trust proxy", SERVER_SETTINGS.PROXIES);
@@ -31,30 +33,48 @@ app.get("/metrics", async (req, res) => {
 // Cors
 app.use(cors());
 
-app.get("/stops/:ids", validateStops, async (req, res) => {
-  const ids = req.params.ids.split(",");
-  const date = req.query["date"] as string | undefined;
+app.get("/stops/:ids", validateStops, async (req, res, next) => {
+  try {
+    reportClient(req.ip);
+    const ids = req.params.ids.split(",");
+    const date = req.query["date"] as string | undefined;
 
-  console.log(`[stops by ID] - IDs: ${req.params.ids} Date: ${date ?? "N/A"}`);
-  prometheus.apiCounter.inc({ type: "stop_by_id" });
+    logger.info(`[stops by ID] - IDs: ${req.params.ids} Date: ${date ?? "N/A"}`);
+    prometheus.apiCounter.inc({ type: "stop_by_id" });
 
-  const result = await getStopTimesAtStop(ids, date);
-  return res.json(result);
+    const result = await getStopTimesAtStop(ids, date);
+
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
 });
 
-app.get("/stops/", validateQuery, async (req, res) => {
-  const { q } = req.query;
+app.get("/stops/", validateQuery, async (req, res, next) => {
+  try {
+    reportClient(req.ip);
+    const { q } = req.query;
+    if (q == "aaaa") {
+      throw new Error("Missing query parameter 'q'");
+    }
+    logger.info(`[stops query] - Query: ${q}`);
+    prometheus.apiCounter.inc({ type: "stop_query" });
 
-  console.log(`[stops query] - Query: ${q}`);
-  prometheus.apiCounter.inc({ type: "stop_query" });
-
-  const result = await query(q as string);
-  return res.json(result);
+    const result = await query(q as string);
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
 });
 
 app.use((req, res, _next) => {
-  console.log(`[404] - ${req.path}`);
+  logger.info(`[404] - ${req.path}`);
   res.status(404).send();
 });
 
-app.listen(3000, () => console.log("Server running on port 3000"));
+app.use((err, req, res, next) => {
+  logger.error(err);
+  res.status(500).send();
+});
+
+app.listen(3000, () => logger.info("Server started on port 3000"));

@@ -3,10 +3,11 @@ import { realTimeUpdateCounter } from "../helpers/prometheus";
 import { getLastModifiedHeader, setLastModifiedHeader, setTripUpdates } from "../redis/tripUpdate";
 import { GTFS_SETTINGS } from "../settings";
 import { NewTripUpdate } from "../types";
+import logger from "../helpers/logger";
 
 export async function sync() {
   try {
-    console.log(`[TRIPUPDATES SYNC] - Started`);
+    logger.info(`[tripupdates-sync] Started syncing trip updates`);
 
     // Fetch feed
     const url = GTFS_SETTINGS.TRIP_UPDATES_URL;
@@ -84,14 +85,8 @@ export async function sync() {
     // Store tripUpdates in Redis
     await setTripUpdates(result);
 
-    console.log(`[TRIPUPDATES SYNC] - Done`);
+    logger.info(`[tripupdates-sync] Stored ${result.length} trip updates in Redis`);
   } catch (error) {
-    let errorMessage = "Unknow error while syncing";
-    if (error instanceof Error) {
-      errorMessage += `: ${error.message}`;
-    }
-
-    console.error(`[TRIPUPDATES SYNC] - ${errorMessage}`);
-    console.error(error);
+    logger.error(error);
   }
 }
