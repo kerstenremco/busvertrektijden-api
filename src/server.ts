@@ -54,9 +54,6 @@ app.get("/stops/", validateQuery, async (req, res, next) => {
   try {
     reportClient(req.ip);
     const { q } = req.query;
-    if (q == "aaaa") {
-      throw new Error("Missing query parameter 'q'");
-    }
     logger.info(`[stops query] - Query: ${q}`);
     prometheus.apiCounter.inc({ type: "stop_query" });
 
