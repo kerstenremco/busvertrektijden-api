@@ -5,11 +5,11 @@ export const querySchema = z.object({
     .string()
     .min(1)
     .max(40)
-    .regex(/^[a-z0-9,./-\s]+$/i),
+    .regex(/^[a-z0-9,.'"/-\s]+$/i),
 });
 
 export const validateQuery = (req, res, next) => {
-  const parseResult = querySchema.parse(req.query);
+  querySchema.parse(req.query);
   next();
 };
 
