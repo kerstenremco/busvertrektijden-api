@@ -63,7 +63,7 @@ export async function getStopTimesAtStop(
     const itemTripHeadSign = item.stopTime.tripHeadSign.toLowerCase();
 
     const passShortName = shortNameFilter.length == 0 || shortNameFilterLower.includes(itemShortName);
-    const passTripHeadSign = tripHeadSignFilter.length == 0 || tripHeadSignFilterLower.includes(itemTripHeadSign);
+    const passTripHeadSign = tripHeadSignFilter.length == 0 || tripHeadSignFilterLower.some((f) => itemTripHeadSign.includes(f));
 
     return passShortName && passTripHeadSign;
   });
