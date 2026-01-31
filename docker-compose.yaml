@@ -19,7 +19,7 @@ services:
     ports:
       - 3000:3000
     env_file:
-      - .env
+      - .env.api
     environment:
       - SERVER_CMD=server
     depends_on:
@@ -29,7 +29,7 @@ services:
     build: .
     restart: unless-stopped
     env_file:
-      - .env
+      - .env.api
     environment:
       - SERVER_CMD=server:worker
     depends_on:
