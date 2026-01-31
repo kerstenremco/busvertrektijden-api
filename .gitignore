@@ -1,7 +1,8 @@
 node_modules/
 DS_Store
 dist/
-.env*
+.env
+.env.api
+.env.db
 api/src/debug_feed.pb
-docker-compose*
 logs/
