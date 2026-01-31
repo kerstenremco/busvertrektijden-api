@@ -24,7 +24,12 @@ async function getUniqueStopIds(ids: string[]): Promise<string[]> {
   return unique;
 }
 
-export async function getStopTimesAtStop(ids: string[], date: string | undefined): Promise<StopTimesResult> {
+export async function getStopTimesAtStop(
+  ids: string[],
+  date: string | undefined,
+  shortNameFilter: string[],
+  tripHeadSignFilter: string[],
+): Promise<StopTimesResult> {
   const result: StopTimesResult = { results: [] };
   const allIds = await getUniqueStopIds(ids);
 
@@ -44,6 +49,16 @@ export async function getStopTimesAtStop(ids: string[], date: string | undefined
       await setCachedStopTimesByStop(dateString, stopId, stops);
     }
   }
+
+  result.results = result.results.filter((item) => {
+    const itemShortName = item.stopTime.routeShortName.toLowerCase();
+    const itemTripHeadSign = item.stopTime.tripHeadSign.toLowerCase();
+
+    const passShortName = shortNameFilter.length == 0 || shortNameFilter.some((f) => itemShortName == f.toLowerCase());
+    const passTripHeadSign = tripHeadSignFilter.length == 0 || tripHeadSignFilter.some((f) => itemTripHeadSign.includes(f.toLowerCase()));
+
+    return passShortName && passTripHeadSign;
+  });
 
   // TODO: Add real time info and alert, cache
   for (const stop of result.results) {

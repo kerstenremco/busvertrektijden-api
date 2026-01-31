@@ -13,7 +13,7 @@
 }
 ```
 
-**/stops/:ids**
+**/stops/:ids?shortnamefilter=&tripheadsignfilter=**
 
 ```ts
 {

@@ -37,12 +37,20 @@ app.get("/stops/:ids", validateStops, async (req, res, next) => {
   try {
     reportClient(req.ip);
     const ids = req.params.ids.split(",");
+
     const date = req.query["date"] as string | undefined;
+    const shortNameFilter = req.query["shortnamefilter"] as string | undefined;
+    const tripHeadSignFilter = req.query["tripheadsignfilter"] as string | undefined;
 
     logger.info(`[stops by ID] - IDs: ${req.params.ids} Date: ${date ?? "N/A"}`);
     prometheus.apiCounter.inc({ type: "stop_by_id" });
 
-    const result = await getStopTimesAtStop(ids, date);
+    const result = await getStopTimesAtStop(
+      ids,
+      date,
+      shortNameFilter ? shortNameFilter.split(",") : [],
+      tripHeadSignFilter ? tripHeadSignFilter.split(",") : [],
+    );
 
     res.json(result);
   } catch (error) {
