@@ -52,7 +52,7 @@ export const StopTimeSchema = z.object({
   arrivalTime: z.string(),
   departureTime: z.string(),
   stopId: z.string(),
-  stopHeadsign: z.string(),
+  stopHeadSign: z.string(),
   routeId: z.string(),
   routeShortName: z.string(),
   routeLongName: z.string(),
@@ -84,7 +84,7 @@ export const StopTimesResultSchema = z.object({
       stopTime: StopTimeSchema,
       tripUpdate: TripUpdateComputedSchema.optional(),
       alerts: z.array(AlertSchema).optional(),
-    })
+    }),
   ),
 });
 

@@ -87,7 +87,7 @@ export async function getStopTimes(stopId: string, svcIds: number[]): Promise<St
     routeId: x.trip.route.route_id,
     routeShortName: x.trip.route.route_short_name || "",
     routeLongName: x.trip.route.route_long_name || "",
-    stopHeadsign: x.stop_headsign || "",
+    stopHeadSign: x.stop_headsign || "",
     tripId: x.trip.trip_id.toString(),
     tripHeadSign: x.trip.trip_headsign || "",
   }));

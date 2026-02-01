@@ -23,7 +23,7 @@
             arrivalTime: string;
             departureTime: string;
             stopId: string;
-            stopHeadsign: string;
+            stopHeadSign: string;
             routeId: string;
             routeShortName: string;
             routeLongName: string;
